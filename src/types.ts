@@ -63,3 +63,107 @@ export async function runAgentTask(agent: Agent, task: string) {
     throw error;
   }
 }
+
+// ─── SaaS Domain Types ────────────────────────────────────────────────────────
+
+export type UserRole = 'admin' | 'dispatcher' | 'operator';
+
+export interface AppUser {
+  id: string;
+  name: string;
+  email: string;
+  passwordHash: string;
+  role: UserRole;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface AuthSession {
+  userId: string;
+  role: UserRole;
+  name: string;
+  email: string;
+  expiresAt: string;
+}
+
+export type TruckStatus = 'available' | 'loading' | 'in_transit' | 'maintenance';
+
+export interface Truck {
+  id: string;
+  plate: string;
+  model: string;
+  typeName: string;
+  floorLengthCm: number;
+  floorWidthCm: number;
+  maxWeightKg: number;
+  status: TruckStatus;
+  createdAt: string;
+}
+
+export interface PalletType {
+  id: string;
+  name: string;
+  product: string;
+  widthCm: number;
+  depthCm: number;
+  heightCm: number;
+  weightKg: number;
+  createdAt: string;
+}
+
+export interface GridPosition {
+  col: number;
+  row: number;
+}
+
+export type SlotStatus = 'empty' | 'placed' | 'loaded';
+
+export interface PlacedPallet {
+  id: string;
+  orderId: string;
+  orderNumber: string;
+  palletTypeId: string;
+  position: GridPosition;
+  status: SlotStatus;
+  weightKg: number;
+  loadedAt?: string;
+  loadedByUserId?: string;
+}
+
+export interface TruckLoadingState {
+  truckId: string;
+  pallets: PlacedPallet[];
+}
+
+export type OrderStatus =
+  | 'pending'
+  | 'assigned'
+  | 'loading'
+  | 'loaded'
+  | 'in_transit'
+  | 'delivered'
+  | 'cancelled';
+
+export interface OrderLine {
+  id: string;
+  palletTypeId: string;
+  palletTypeName: string;
+  quantity: number;
+  weightPerPallet: number;
+}
+
+export interface Order {
+  id: string;
+  orderNumber: string;
+  clientName: string;
+  destination: string;
+  lines: OrderLine[];
+  totalPallets: number;
+  totalWeightKg: number;
+  status: OrderStatus;
+  assignedTruckId?: string;
+  createdByUserId: string;
+  createdAt: string;
+  updatedAt: string;
+  notes?: string;
+}
