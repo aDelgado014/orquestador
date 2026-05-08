@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Propuesta Landing Page · MAGEC Velas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --cream:#F5F0E8;--cream2:#EDE5D6;--terra:#C4845A;--bark:#2C2416;
+    --sand:#E0D0B8;--smoke:#7A6A55;--gold:#D4A878;
+    --serif:'Cormorant Garamond',Georgia,serif;
+    --sans:'DM Sans',sans-serif;
+  }
+  html{scroll-behavior:smooth}
+  body{background:#F5F0E8;font-family:var(--sans);color:var(--bark)}
+
+  /* ── Helpers ── */
+  .serif{font-family:var(--serif)}
+  .tag{display:inline-block;padding:3px 12px;border-radius:999px;font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+  .tag-terra{background:rgba(196,132,90,.13);color:#8A5A38}
+  .tag-white{background:rgba(245,240,232,.15);color:rgba(245,240,232,.85)}
+  .btn-dark{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:999px;background:var(--bark);color:var(--cream);font-size:.9rem;font-weight:600;text-decoration:none;transition:.2s}
+  .btn-outline{display:inline-flex;align-items:center;gap:8px;padding:11px 28px;border-radius:999px;border:2px solid var(--terra);color:var(--terra);font-size:.9rem;font-weight:600;text-decoration:none;transition:.2s}
+  .divider{height:1px;background:rgba(196,132,90,.18);margin:0 auto}
+
+  /* ── Animations ── */
+  @keyframes flicker{
+    0%,100%{transform:scaleY(1) rotate(-1deg)}
+    30%{transform:scaleY(.95) rotate(1deg)}
+    60%{transform:scaleY(1.04) rotate(-.5deg)}
+  }
+  @keyframes glow{
+    0%,100%{filter:drop-shadow(0 0 8px rgba(255,160,50,.6))}
+    50%{filter:drop-shadow(0 0 22px rgba(255,160,50,.95))}
+  }
+  @keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+  @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+  .flame{animation:flicker 1.7s ease-in-out infinite,glow 2s ease-in-out infinite}
+  .floaty{animation:floatY 4s ease-in-out infinite}
+  .marquee{animation:marquee 22s linear infinite;white-space:nowrap}
+  .fade-up{animation:fadeUp .7s ease both}
+
+  /* ════════════════════════════════════════════
+     COVER
+  ════════════════════════════════════════════ */
+  #cover{
+    min-height:100vh;
+    background:linear-gradient(160deg,#F5F0E8 0%,#EDE5D6 55%,#E0D2BC 100%);
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    text-align:center;padding:60px 24px;
+    position:relative;overflow:hidden;
+  }
+  #cover::before{
+    content:'';position:absolute;top:10%;left:5%;
+    width:320px;height:320px;border-radius:50%;
+    background:radial-gradient(circle,rgba(196,132,90,.18),transparent 70%);
+    pointer-events:none;
+  }
+  #cover::after{
+    content:'';position:absolute;bottom:8%;right:5%;
+    width:440px;height:440px;border-radius:50%;
+    background:radial-gradient(circle,rgba(200,132,60,.12),transparent 70%);
+    pointer-events:none;
+  }
+
+  /* SVG Candle */
+  .candle-wrap{margin-bottom:40px;position:relative;z-index:2}
+
+  .cover-eyebrow{
+    letter-spacing:.38em;font-size:.72rem;font-weight:500;
+    color:var(--terra);text-transform:uppercase;margin-bottom:18px;
+    position:relative;z-index:2;
+  }
+  .cover-h1{
+    font-family:var(--serif);
+    font-size:clamp(3.2rem,9vw,6.5rem);
+    font-weight:600;color:var(--bark);
+    line-height:1.05;margin-bottom:20px;
+    position:relative;z-index:2;
+  }
+  .cover-h1 em{color:var(--terra);font-style:italic}
+  .cover-sub{
+    font-size:1.1rem;color:var(--smoke);font-weight:300;
+    max-width:480px;line-height:1.7;margin-bottom:40px;
+    position:relative;z-index:2;
+  }
+  .cover-btns{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;position:relative;z-index:2}
+  .cover-proof{
+    margin-top:44px;display:flex;flex-wrap:wrap;align-items:center;
+    justify-content:center;gap:20px;font-size:.85rem;color:var(--smoke);
+    position:relative;z-index:2;
+  }
+  .stars{display:flex;gap:3px}
+  .star{width:14px;height:14px;fill:var(--terra)}
+  .scroll-hint{
+    position:absolute;bottom:24px;left:50%;transform:translateX(-50%);
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    opacity:.45;
+  }
+  .scroll-hint span{font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;color:var(--smoke)}
+  .chevron{width:18px;height:18px;animation:floatY 1.5s ease-in-out infinite;color:var(--terra)}
+
+  /* ════════════════════════════════════════════
+     TICKER
+  ════════════════════════════════════════════ */
+  #ticker{background:var(--bark);padding:11px 0;overflow:hidden}
+  #ticker .track{display:inline-flex}
+  #ticker .item{
+    display:inline-block;padding:0 32px;
+    font-size:.72rem;font-weight:500;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--terra);
+  }
+
+  /* ════════════════════════════════════════════
+     SECTION LABEL
+  ════════════════════════════════════════════ */
+  .section-label{
+    letter-spacing:.38em;font-size:.7rem;font-weight:500;
+    color:var(--terra);text-transform:uppercase;margin-bottom:14px;
+    display:block;
+  }
+  .section-h2{
+    font-family:var(--serif);
+    font-size:clamp(2rem,4vw,3rem);
+    font-weight:600;color:var(--bark);
+    line-height:1.15;margin-bottom:10px;
+  }
+  .section-h2-light{color:#F5F0E8}
+  .section-sub{color:var(--smoke);font-weight:300;max-width:480px}
+
+  /* ════════════════════════════════════════════
+     NOSOTROS
+  ════════════════════════════════════════════ */
+  #nosotros{
+    background:var(--bark);padding:90px 24px;
+  }
+  .nosotros-grid{
+    max-width:960px;margin:0 auto;
+    display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;
+  }
+  @media(max-width:720px){.nosotros-grid{grid-template-columns:1fr}}
+  .candle-trio{
+    display:flex;align-items:flex-end;justify-content:center;
+    gap:16px;position:relative;padding:40px 20px;
+  }
+  .candle-trio::before{
+    content:'';position:absolute;inset:0;border-radius:50%;
+    background:radial-gradient(ellipse at 50% 60%,rgba(196,132,90,.22),transparent 70%);
+  }
+  .chip{
+    padding:6px 14px;border-radius:999px;
+    font-size:.72rem;font-weight:600;
+  }
+  .chip-terra{background:var(--terra);color:var(--cream)}
+  .chip-light{background:var(--cream);color:var(--bark)}
+  .nosotros-text .section-h2{color:#F5F0E8}
+  .nosotros-text p{color:#A89880;font-weight:300;font-size:1.02rem;line-height:1.8;margin-bottom:14px}
+  .nosotros-link{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:.9rem;font-weight:600;color:var(--gold);text-decoration:none;
+  }
+
+  /* ════════════════════════════════════════════
+     PRODUCTOS
+  ════════════════════════════════════════════ */
+  #productos{background:var(--cream);padding:90px 24px}
+  .products-grid{
+    max-width:1040px;margin:40px auto 40px;
+    display:grid;grid-template-columns:repeat(3,1fr);gap:20px;
+  }
+  @media(max-width:900px){.products-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:560px){.products-grid{grid-template-columns:1fr}}
+  .pcard{
+    border-radius:18px;overflow:hidden;
+    background:#FFF8F0;border:1px solid rgba(196,132,90,.13);
+    transition:.3s;
+  }
+  .pcard:hover{transform:translateY(-5px);box-shadow:0 18px 36px rgba(44,36,22,.1)}
+  .pcard-img{
+    height:160px;display:flex;align-items:center;justify-content:center;
+    font-size:3.5rem;position:relative;overflow:hidden;
+  }
+  .pcard-badge{
+    position:absolute;top:10px;left:10px;
+    padding:3px 10px;border-radius:999px;
+    font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+    background:var(--terra);color:var(--cream);
+  }
+  .pcard-body{padding:18px}
+  .pcard-name{
+    font-family:var(--serif);font-size:1.1rem;font-weight:600;
+    color:var(--bark);margin-bottom:4px;
+  }
+  .pcard-sub{font-size:.83rem;color:var(--smoke);font-weight:300;margin-bottom:12px;line-height:1.5}
+  .pcard-row{display:flex;align-items:center;justify-content:space-between}
+  .pcard-price{font-size:.95rem;font-weight:600;color:var(--terra)}
+  .pcard-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+
+  /* ════════════════════════════════════════════
+     COLECCIONES
+  ════════════════════════════════════════════ */
+  #colecciones{background:var(--cream2);padding:90px 24px}
+  .coll-grid{
+    max-width:960px;margin:40px auto 0;
+    display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+  }
+  @media(max-width:700px){.coll-grid{grid-template-columns:repeat(2,1fr)}}
+  .coll-card{
+    border-radius:16px;overflow:hidden;
+    padding:36px 20px;text-align:center;
+    display:flex;flex-direction:column;align-items:center;
+    cursor:pointer;transition:.25s;position:relative;
+  }
+  .coll-card:hover{transform:scale(1.03)}
+  .coll-emoji{font-size:2.4rem;margin-bottom:8px;display:block}
+  .coll-label{
+    font-family:var(--serif);font-size:1.05rem;font-weight:600;
+    color:rgba(245,240,232,.92);letter-spacing:.04em;
+  }
+
+  /* ════════════════════════════════════════════
+     BENEFICIOS
+  ════════════════════════════════════════════ */
+  #beneficios{background:var(--cream);padding:90px 24px}
+  .ben-grid{
+    max-width:960px;margin:40px auto 0;
+    display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
+  }
+  @media(max-width:860px){.ben-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:520px){.ben-grid{grid-template-columns:1fr}}
+  .ben-card{
+    padding:24px;border-radius:18px;
+    background:#FFF8F0;border:1px solid rgba(196,132,90,.1);
+    transition:.25s;
+  }
+  .ben-card:hover{box-shadow:0 10px 28px rgba(44,36,22,.08)}
+  .ben-icon{
+    width:44px;height:44px;border-radius:12px;
+    background:rgba(196,132,90,.12);
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.3rem;margin-bottom:14px;
+  }
+  .ben-title{
+    font-family:var(--serif);font-size:1.02rem;font-weight:600;
+    color:var(--bark);margin-bottom:6px;
+  }
+  .ben-desc{font-size:.84rem;color:var(--smoke);font-weight:300;line-height:1.65}
+
+  /* ════════════════════════════════════════════
+     GALERÍA
+  ════════════════════════════════════════════ */
+  #galeria{background:var(--bark);padding:90px 24px}
+  .gal-grid{
+    max-width:960px;margin:36px auto 36px;
+    display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+  }
+  @media(max-width:600px){.gal-grid{grid-template-columns:repeat(2,1fr)}}
+  .gal-item{
+    aspect-ratio:1/1;border-radius:14px;overflow:hidden;
+    display:flex;flex-direction:column;align-items:center;
+    justify-content:center;position:relative;cursor:pointer;
+    transition:.3s;
+  }
+  .gal-item:hover{transform:scale(1.03)}
+  .gal-emoji{font-size:2.8rem;opacity:.75;margin-bottom:6px}
+  .gal-label{font-size:.72rem;font-weight:500;color:rgba(44,36,22,.6);letter-spacing:.04em}
+
+  /* ════════════════════════════════════════════
+     CTA
+  ════════════════════════════════════════════ */
+  #cta{
+    background:linear-gradient(135deg,#EDE5D6 0%,#E0D0B8 50%,#D4C4A0 100%);
+    padding:100px 24px;text-align:center;
+  }
+  #cta .section-h2{font-size:clamp(2.2rem,6vw,4rem)}
+  #cta .section-h2 em{color:var(--terra);font-style:italic}
+  #cta p{color:var(--smoke);font-weight:300;font-size:1.02rem;line-height:1.75;max-width:520px;margin:14px auto 36px}
+  .cta-btns{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
+
+  /* ════════════════════════════════════════════
+     FOOTER
+  ════════════════════════════════════════════ */
+  footer{
+    background:#1E160C;padding:40px 24px;
+    border-top:1px solid rgba(196,132,90,.12);
+  }
+  .footer-inner{
+    max-width:960px;margin:0 auto;
+    display:flex;flex-wrap:wrap;align-items:center;
+    justify-content:space-between;gap:16px;
+  }
+  .footer-logo{
+    font-family:var(--serif);font-size:1.4rem;font-weight:600;
+    letter-spacing:.08em;color:#F5F0E8;
+  }
+  .footer-logo span{font-size:.5rem;letter-spacing:.25em;color:var(--terra);vertical-align:baseline;margin-left:4px}
+  .footer-copy{font-size:.75rem;color:#4A3A28}
+  .footer-store{font-size:.75rem;color:#6A5A44}
+
+  /* ════════════════════════════════════════════
+     PROPOSAL BANNER (top of page)
+  ════════════════════════════════════════════ */
+  #proposal-banner{
+    background:var(--terra);padding:14px 24px;
+    text-align:center;position:sticky;top:0;z-index:100;
+    display:flex;align-items:center;justify-content:center;gap:12px;
+    flex-wrap:wrap;
+  }
+  #proposal-banner p{color:#fff;font-size:.82rem;font-weight:500;letter-spacing:.02em}
+  #proposal-banner strong{font-weight:700}
+  .banner-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.5);display:inline-block}
+</style>
+</head>
+<body>
+
+<!-- ══ PROPOSAL BANNER ══════════════════════════════════════════════════════ -->
+<div id="proposal-banner">
+  <span class="banner-dot"></span>
+  <p>✦ <strong>Propuesta de diseño</strong> · Landing Page MAGEC Velas · Este archivo es una previsualización interactiva</p>
+  <span class="banner-dot"></span>
+</div>
+
+<!-- ══ HERO / COVER ══════════════════════════════════════════════════════════ -->
+<section id="cover">
+
+  <!-- Animated Candle -->
+  <div class="candle-wrap floaty">
+    <svg width="72" height="120" viewBox="0 0 72 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Flame -->
+      <g class="flame" transform-origin="36 38">
+        <ellipse cx="36" cy="38" rx="9" ry="14"
+          fill="url(#flame-grad)" filter="url(#f-glow)"/>
+        <ellipse cx="36" cy="44" rx="5" ry="8" fill="#FFF7AA" opacity=".6"/>
+      </g>
+      <!-- Wick -->
+      <rect x="34.5" y="50" width="3" height="10" rx="1.5" fill="#3D2410"/>
+      <!-- Candle body -->
+      <rect x="16" y="58" width="40" height="58" rx="5" fill="url(#body-grad)"/>
+      <!-- Wax sheen -->
+      <rect x="16" y="68" width="40" height="3" rx="1.5" fill="rgba(255,255,255,.35)"/>
+      <!-- Shadow left -->
+      <rect x="16" y="58" width="8" height="58" rx="4" fill="rgba(0,0,0,.06)"/>
+      <defs>
+        <radialGradient id="flame-grad" cx="50%" cy="85%" r="60%">
+          <stop offset="0%" stop-color="#FFF7AA"/>
+          <stop offset="35%" stop-color="#FFCC33"/>
+          <stop offset="70%" stop-color="#FF8C00"/>
+          <stop offset="100%" stop-color="#E83A00" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="body-grad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#F5F0E8"/>
+          <stop offset="50%" stop-color="#E4D4B8"/>
+          <stop offset="100%" stop-color="#C8A878"/>
+        </linearGradient>
+        <filter id="f-glow" x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+    </svg>
+  </div>
+
+  <p class="cover-eyebrow fade-up" style="animation-delay:.1s">
+    Velas artesanales · Tenerife, Canarias
+  </p>
+
+  <h1 class="cover-h1 fade-up" style="animation-delay:.2s">
+    Cada producto tiene<br><em>su magia</em>
+  </h1>
+
+  <p class="cover-sub fade-up" style="animation-delay:.3s">
+    Velas escultóricas, joyeros, mikados y más — hechos a mano con cera natural en Tenerife.
+  </p>
+
+  <div class="cover-btns fade-up" style="animation-delay:.4s">
+    <a href="https://magec-velas.sumaplastore.com" target="_blank" class="btn-dark">
+      🛍 Comprar ahora →
+    </a>
+    <a href="https://www.instagram.com/magec.velas" target="_blank" class="btn-outline">
+      📸 Ver Instagram
+    </a>
+  </div>
+
+  <div class="cover-proof fade-up" style="animation-delay:.5s">
+    <div style="display:flex;align-items:center;gap:6px">
+      <div class="stars">
+        <svg class="star" viewBox="0 0 20 20"><path d="M10 1l2.4 6.8H19l-5.5 4 2.1 6.8L10 14.8 4.4 18.6l2.1-6.8L1 7.8h6.6z"/></svg>
+        <svg class="star" viewBox="0 0 20 20"><path d="M10 1l2.4 6.8H19l-5.5 4 2.1 6.8L10 14.8 4.4 18.6l2.1-6.8L1 7.8h6.6z"/></svg>
+        <svg class="star" viewBox="0 0 20 20"><path d="M10 1l2.4 6.8H19l-5.5 4 2.1 6.8L10 14.8 4.4 18.6l2.1-6.8L1 7.8h6.6z"/></svg>
+        <svg class="star" viewBox="0 0 20 20"><path d="M10 1l2.4 6.8H19l-5.5 4 2.1 6.8L10 14.8 4.4 18.6l2.1-6.8L1 7.8h6.6z"/></svg>
+        <svg class="star" viewBox="0 0 20 20"><path d="M10 1l2.4 6.8H19l-5.5 4 2.1 6.8L10 14.8 4.4 18.6l2.1-6.8L1 7.8h6.6z"/></svg>
+      </div>
+      <span>+500 clientes felices</span>
+    </div>
+    <span style="color:var(--terra);opacity:.4">·</span>
+    <span>📍 Envíos a toda España</span>
+  </div>
+
+  <div class="scroll-hint">
+    <span>Descubrir</span>
+    <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="6 9 12 15 18 9"/>
+    </svg>
+  </div>
+</section>
+
+<!-- ══ TICKER ════════════════════════════════════════════════════════════════ -->
+<div id="ticker">
+  <div class="track marquee">
+    <span class="item">✦ Hecho a mano</span>
+    <span class="item">✦ Cera natural</span>
+    <span class="item">✦ Envío a toda España</span>
+    <span class="item">✦ Tenerife, Canarias</span>
+    <span class="item">✦ Cada producto tiene su magia</span>
+    <span class="item">✦ Velas escultóricas únicas</span>
+    <span class="item">✦ Pedidos personalizados</span>
+    <span class="item">✦ Hecho a mano</span>
+    <span class="item">✦ Cera natural</span>
+    <span class="item">✦ Envío a toda España</span>
+    <span class="item">✦ Tenerife, Canarias</span>
+    <span class="item">✦ Cada producto tiene su magia</span>
+    <span class="item">✦ Velas escultóricas únicas</span>
+    <span class="item">✦ Pedidos personalizados</span>
+  </div>
+</div>
+
+<!-- ══ NOSOTROS ══════════════════════════════════════════════════════════════ -->
+<section id="nosotros">
+  <div class="nosotros-grid">
+
+    <!-- Visual -->
+    <div>
+      <div class="candle-trio">
+        <!-- Small candle -->
+        <svg width="38" height="80" viewBox="0 0 38 80">
+          <g class="flame" style="animation-delay:.3s" transform-origin="19 18">
+            <ellipse cx="19" cy="18" rx="6" ry="10" fill="url(#f2)"/>
+          </g>
+          <rect x="17.5" y="26" width="3" height="7" rx="1.5" fill="#3D2410"/>
+          <rect x="8" y="31" width="22" height="46" rx="4" fill="url(#b2)"/>
+          <defs>
+            <radialGradient id="f2" cx="50%" cy="85%" r="60%">
+              <stop offset="0%" stop-color="#FFF7AA"/><stop offset="60%" stop-color="#FF8C00"/>
+              <stop offset="100%" stop-color="#E83A00" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="b2" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#F5F0E8"/><stop offset="100%" stop-color="#C8A878"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <!-- Big candle -->
+        <svg width="52" height="108" viewBox="0 0 52 108">
+          <g class="flame" transform-origin="26 22">
+            <ellipse cx="26" cy="22" rx="8" ry="14" fill="url(#f3)" filter="url(#fg3)"/>
+          </g>
+          <rect x="24" y="34" width="4" height="10" rx="2" fill="#3D2410"/>
+          <rect x="10" y="42" width="32" height="64" rx="5" fill="url(#b3)"/>
+          <defs>
+            <radialGradient id="f3" cx="50%" cy="85%" r="60%">
+              <stop offset="0%" stop-color="#FFF7AA"/><stop offset="35%" stop-color="#FFCC33"/>
+              <stop offset="70%" stop-color="#FF8C00"/><stop offset="100%" stop-color="#E83A00" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="b3" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#F5F0E8"/><stop offset="50%" stop-color="#E4D4B8"/>
+              <stop offset="100%" stop-color="#C8A878"/>
+            </linearGradient>
+            <filter id="fg3" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="3"/></filter>
+          </defs>
+        </svg>
+        <!-- Small candle 2 -->
+        <svg width="38" height="80" viewBox="0 0 38 80">
+          <g class="flame" style="animation-delay:.6s" transform-origin="19 18">
+            <ellipse cx="19" cy="18" rx="6" ry="10" fill="url(#f4)"/>
+          </g>
+          <rect x="17.5" y="26" width="3" height="7" rx="1.5" fill="#3D2410"/>
+          <rect x="8" y="31" width="22" height="46" rx="4" fill="url(#b4)"/>
+          <defs>
+            <radialGradient id="f4" cx="50%" cy="85%" r="60%">
+              <stop offset="0%" stop-color="#FFF7AA"/><stop offset="60%" stop-color="#FF8C00"/>
+              <stop offset="100%" stop-color="#E83A00" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="b4" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#F5F0E8"/><stop offset="100%" stop-color="#C8A878"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <!-- Chips -->
+        <div style="position:absolute;top:10px;right:0">
+          <span class="chip chip-terra">Hecho a mano ✦</span>
+        </div>
+        <div style="position:absolute;bottom:10px;left:0">
+          <span class="chip chip-light">Cera natural 🌿</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Text -->
+    <div class="nosotros-text">
+      <span class="section-label">Nuestra historia</span>
+      <h2 class="section-h2">Una marca nacida en <em style="color:var(--gold)">Tenerife</em> con magia propia</h2>
+      <p>MAGEC Velas nació del amor por los aromas y el diseño artesanal. Desde nuestra isla creamos velas escultóricas únicas — desde joyeros con sorpresa hasta carruseles de cera — con materiales naturales y mucho cariño.</p>
+      <p>Nos encontrás en mercados de Tenerife y en nuestra tienda online. Cada pieza es irrepetible, como las personas para las que las regalás.</p>
+      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:8px">
+        <a href="https://magec-velas.sumaplastore.com" target="_blank" class="nosotros-link">Visitar tienda →</a>
+        <span style="color:#5A4A3A">|</span>
+        <a href="https://www.instagram.com/magec.velas" target="_blank"
+          style="font-size:.85rem;color:#A89880;text-decoration:none;display:flex;align-items:center;gap:5px">
+          📸 @magec.velas
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ PRODUCTOS ════════════════════════════════════════════════════════════ -->
+<section id="productos">
+  <div style="max-width:1040px;margin:0 auto;text-align:center">
+    <span class="section-label">Lo que creamos</span>
+    <h2 class="section-h2">Nuestros productos</h2>
+    <p class="section-sub" style="margin:0 auto">Desde velas con joyería escondida hasta mikados para tu hogar — todos hechos a mano.</p>
+  </div>
+
+  <div class="products-grid">
+
+    <div class="pcard">
+      <div class="pcard-img" style="background:#EDE5D6">
+        <span>💎</span>
+        <span class="pcard-badge">Best Seller</span>
+      </div>
+      <div class="pcard-body">
+        <div class="pcard-row">
+          <div class="pcard-name">Vela Joyero</div>
+          <div class="pcard-price">Desde $18</div>
+        </div>
+        <div class="pcard-sub">Descubre una joya en su interior</div>
+        <div class="pcard-tags">
+          <span class="tag tag-terra">Cera natural</span>
+          <span class="tag tag-terra">Con sorpresa</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pcard">
+      <div class="pcard-img" style="background:#F7E8E0"><span>🛁</span></div>
+      <div class="pcard-body">
+        <div class="pcard-row">
+          <div class="pcard-name">Vela Barqueta</div>
+          <div class="pcard-price">Desde $14</div>
+        </div>
+        <div class="pcard-sub">La vela que transforma tu baño</div>
+        <div class="pcard-tags">
+          <span class="tag tag-terra">Escultórica</span>
+          <span class="tag tag-terra">Artesanal</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pcard">
+      <div class="pcard-img" style="background:#F0EBE0">
+        <span>🎠</span>
+        <span class="pcard-badge">Premium</span>
+      </div>
+      <div class="pcard-body">
+        <div class="pcard-row">
+          <div class="pcard-name">Vela Carrusel</div>
+          <div class="pcard-price">Desde $22</div>
+        </div>
+        <div class="pcard-sub">Magia y detalle en cada llama</div>
+        <div class="pcard-tags">
+          <span class="tag tag-terra">Edición especial</span>
+          <span class="tag tag-terra">Regalo ideal</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pcard">
+      <div class="pcard-img" style="background:#E8EDE8"><span>🕯️</span></div>
+      <div class="pcard-body">
+        <div class="pcard-row">
+          <div class="pcard-name">Velón XXL</div>
+          <div class="pcard-price">Desde $16</div>
+        </div>
+        <div class="pcard-sub">Aroma, diseño y funcionalidad</div>
+        <div class="pcard-tags">
+          <span class="tag tag-terra">Gran tamaño</span>
+          <span class="tag tag-terra">Cera de soja</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pcard">
+      <div class="pcard-img" style="background:#EBE8F0"><span>🪔</span></div>
+      <div class="pcard-body">
+        <div class="pcard-row">
+          <div class="pcard-name">Mikados</div>
+          <div class="pcard-price">Desde $12</div>
+        </div>
+        <div class="pcard-sub">Aromas constantes para tu hogar</div>
+        <div class="pcard-tags">
+          <span class="tag tag-terra">Sin llama</span>
+          <span class="tag tag-terra">Larga duración</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pcard">
+      <div class="pcard-img" style="background:#F0E8E8"><span>🚗</span></div>
+      <div class="pcard-body">
+        <div class="pcard-row">
+          <div class="pcard-name">Ambientador Coche</div>
+          <div class="pcard-price">Desde $8</div>
+        </div>
+        <div class="pcard-sub">Tu fragancia favorita en cada viaje</div>
+        <div class="pcard-tags">
+          <span class="tag tag-terra">Compacto</span>
+          <span class="tag tag-terra">Potente</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="text-align:center">
+    <a href="https://magec-velas.sumaplastore.com" target="_blank" class="btn-dark">
+      🛍 Ver catálogo completo →
+    </a>
+  </div>
+</section>
+
+<!-- ══ COLECCIONES ═══════════════════════════════════════════════════════════ -->
+<section id="colecciones">
+  <div style="max-width:960px;margin:0 auto;text-align:center">
+    <span class="section-label">Para cada momento</span>
+    <h2 class="section-h2">Colecciones especiales</h2>
+  </div>
+  <div class="coll-grid">
+    <div class="coll-card" style="background:linear-gradient(135deg,#3D2410,#8B3A0F)">
+      <span class="coll-emoji">👻</span><span class="coll-label">Halloween</span>
+    </div>
+    <div class="coll-card" style="background:linear-gradient(135deg,#1A3A1A,#2E5E2E)">
+      <span class="coll-emoji">🎄</span><span class="coll-label">Navidad</span>
+    </div>
+    <div class="coll-card" style="background:linear-gradient(135deg,#C47A2A,#E4A84B)">
+      <span class="coll-emoji">☀️</span><span class="coll-label">Verano</span>
+    </div>
+    <div class="coll-card" style="background:linear-gradient(135deg,#1A1A3A,#3A2A5A)">
+      <span class="coll-emoji">⚡</span><span class="coll-label">Harry Potter</span>
+    </div>
+    <div class="coll-card" style="background:linear-gradient(135deg,#7A1A2E,#C44A6A)">
+      <span class="coll-emoji">❤️</span><span class="coll-label">San Valentín</span>
+    </div>
+    <div class="coll-card" style="background:linear-gradient(135deg,#2C2416,#5A4A2A)">
+      <span class="coll-emoji">✨</span><span class="coll-label">Personalizada</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══ BENEFICIOS ════════════════════════════════════════════════════════════ -->
+<section id="beneficios">
+  <div style="max-width:960px;margin:0 auto;text-align:center">
+    <span class="section-label">Por qué MAGEC</span>
+    <h2 class="section-h2">El arte de hacer con alma</h2>
+  </div>
+  <div class="ben-grid">
+    <div class="ben-card">
+      <div class="ben-icon">🌿</div>
+      <div class="ben-title">Cera natural 100%</div>
+      <div class="ben-desc">Usamos cera de soja y cera natural. Sin parafina, sin químicos dañinos.</div>
+    </div>
+    <div class="ben-card">
+      <div class="ben-icon">❤️</div>
+      <div class="ben-title">Hecho a mano</div>
+      <div class="ben-desc">Cada pieza es elaborada a mano con dedicación y atención al detalle.</div>
+    </div>
+    <div class="ben-card">
+      <div class="ben-icon">✨</div>
+      <div class="ben-title">Cada producto tiene su magia</div>
+      <div class="ben-desc">Desde velas joyero con sorpresa hasta esculturas únicas. Nada es ordinario.</div>
+    </div>
+    <div class="ben-card">
+      <div class="ben-icon">🎁</div>
+      <div class="ben-title">El regalo perfecto</div>
+      <div class="ben-desc">Packaging cuidado, listo para regalar. También hacemos pedidos personalizados.</div>
+    </div>
+    <div class="ben-card">
+      <div class="ben-icon">📦</div>
+      <div class="ben-title">Envío a toda España</div>
+      <div class="ben-desc">Enviamos a toda la península e islas. También disponibles en ferias de Tenerife.</div>
+    </div>
+    <div class="ben-card">
+      <div class="ben-icon">📍</div>
+      <div class="ben-title">Tenerife, Canarias</div>
+      <div class="ben-desc">Marca canaria con corazón. Nos encontrás en mercados y ferias locales.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ GALERÍA ═══════════════════════════════════════════════════════════════ -->
+<section id="galeria">
+  <div style="max-width:960px;margin:0 auto;text-align:center">
+    <span class="section-label" style="color:var(--terra)">@magec.velas</span>
+    <h2 class="section-h2 section-h2-light">Seguinos en Instagram</h2>
+    <p style="color:#A89880;font-weight:300;margin-bottom:0">Nuevos productos, tips y colecciones exclusivas cada semana</p>
+  </div>
+  <div class="gal-grid">
+    <a href="https://www.instagram.com/magec.velas" target="_blank" class="gal-item"
+      style="background:linear-gradient(135deg,#EDE5D6,#D4C4A8)">
+      <span class="gal-emoji">💎</span><span class="gal-label">Vela Joyero</span>
+    </a>
+    <a href="https://www.instagram.com/magec.velas" target="_blank" class="gal-item"
+      style="background:linear-gradient(135deg,#F7E8E0,#E8C8B8)">
+      <span class="gal-emoji">🛁</span><span class="gal-label">Vela Barqueta</span>
+    </a>
+    <a href="https://www.instagram.com/magec.velas" target="_blank" class="gal-item"
+      style="background:linear-gradient(135deg,#3D2410,#8B5A30)">
+      <span class="gal-emoji">👻</span><span class="gal-label" style="color:rgba(245,240,232,.7)">Halloween</span>
+    </a>
+    <a href="https://www.instagram.com/magec.velas" target="_blank" class="gal-item"
+      style="background:linear-gradient(135deg,#F0EBE0,#DAD0C0)">
+      <span class="gal-emoji">🎠</span><span class="gal-label">Vela Carrusel</span>
+    </a>
+    <a href="https://www.instagram.com/magec.velas" target="_blank" class="gal-item"
+      style="background:linear-gradient(135deg,#1A3A1A,#3A6A3A)">
+      <span class="gal-emoji">🎄</span><span class="gal-label" style="color:rgba(245,240,232,.7)">Navidad</span>
+    </a>
+    <a href="https://www.instagram.com/magec.velas" target="_blank" class="gal-item"
+      style="background:linear-gradient(135deg,#EBE8F0,#C8C0D8)">
+      <span class="gal-emoji">🪔</span><span class="gal-label">Mikados</span>
+    </a>
+  </div>
+  <div style="text-align:center">
+    <a href="https://www.instagram.com/magec.velas" target="_blank"
+      style="display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border-radius:999px;border:2px solid rgba(196,132,90,.55);color:var(--gold);font-size:.92rem;font-weight:600;text-decoration:none;transition:.2s">
+      📸 Ver perfil completo
+    </a>
+  </div>
+</section>
+
+<!-- ══ CTA ════════════════════════════════════════════════════════════════════ -->
+<section id="cta">
+  <div style="max-width:600px;margin:0 auto">
+    <!-- Candle -->
+    <div style="display:flex;justify-content:center;margin-bottom:36px">
+      <div class="floaty">
+        <svg width="56" height="96" viewBox="0 0 56 96" fill="none">
+          <g class="flame" transform-origin="28 26">
+            <ellipse cx="28" cy="26" rx="9" ry="15" fill="url(#fCTA)" filter="url(#gCTA)"/>
+          </g>
+          <rect x="26" y="40" width="4" height="10" rx="2" fill="#3D2410"/>
+          <rect x="12" y="48" width="32" height="46" rx="5" fill="url(#bCTA)"/>
+          <defs>
+            <radialGradient id="fCTA" cx="50%" cy="85%" r="60%">
+              <stop offset="0%" stop-color="#FFF7AA"/>
+              <stop offset="35%" stop-color="#FFCC33"/>
+              <stop offset="70%" stop-color="#FF8C00"/>
+              <stop offset="100%" stop-color="#E83A00" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="bCTA" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#F5F0E8"/>
+              <stop offset="50%" stop-color="#E4D4B8"/>
+              <stop offset="100%" stop-color="#C8A878"/>
+            </linearGradient>
+            <filter id="gCTA" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="4"/>
+            </filter>
+          </defs>
+        </svg>
+      </div>
+    </div>
+
+    <span class="section-label" style="display:block;text-align:center">Llevalos a casa</span>
+    <h2 class="section-h2" style="text-align:center;font-size:clamp(2.2rem,6vw,4rem)">
+      Regalá magia,<br><em style="color:var(--terra);font-style:italic">regalá MAGEC</em>
+    </h2>
+    <p>Pedidos online con envío a toda España. También en ferias y mercados de Tenerife. Para pedidos personalizados o al por mayor, escribinos por Instagram.</p>
+    <div class="cta-btns">
+      <a href="https://magec-velas.sumaplastore.com" target="_blank" class="btn-dark">
+        🛍 Ir a la tienda online
+      </a>
+      <a href="https://www.instagram.com/magec.velas" target="_blank" class="btn-outline">
+        📸 Escribir por Instagram
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ════════════════════════════════════════════════════════════════ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">MAGEC<span>VELAS</span></div>
+    <div class="footer-copy">© 2026 MAGEC Velas · Tenerife, Canarias, España</div>
+    <a href="https://magec-velas.sumaplastore.com" target="_blank" class="footer-store">
+      magec-velas.sumaplastore.com
+    </a>
+  </div>
+</footer>
+
+</body>
+</html>

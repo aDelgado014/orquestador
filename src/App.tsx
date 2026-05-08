@@ -1,349 +1,881 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Terminal, 
-  Users, 
-  Activity, 
-  Cpu, 
-  DollarSign, 
-  Layout, 
-  Play, 
-  Pause, 
-  RefreshCw,
-  MessageSquare,
-  ShieldCheck,
-  Code,
-  PenTool,
-  Calendar,
-  ChevronRight
+import React, { useEffect, useState } from 'react';
+import {
+  Instagram, ShoppingBag, ChevronDown, Star,
+  Leaf, Heart, Package, ArrowRight, Menu, X,
+  MapPin, Sparkles, Gift
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { AGENTS, Agent, ActivityLogEntry, AgentRole, runAgentTask } from './types';
 
-const PixelAgent = ({ agent }: { agent: Agent }) => {
-  const isWorking = agent.status === 'working' || agent.status === 'thinking';
-  
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+interface Product {
+  id: number;
+  name: string;
+  subtitle: string;
+  price: string;
+  bg: string;
+  emoji: string;
+  badge?: string;
+  tags: string[];
+}
+
+interface Benefit { icon: React.ElementType; title: string; desc: string; }
+interface Collection { label: string; bg: string; emoji: string; }
+
+// ─── Data ────────────────────────────────────────────────────────────────────
+
+const STORE_URL = 'https://magec-velas.sumaplastore.com';
+const IG_URL    = 'https://www.instagram.com/magec.velas';
+
+const NAV = [
+  { label: 'Nosotros', href: '#nosotros' },
+  { label: 'Productos', href: '#productos' },
+  { label: 'Colecciones', href: '#colecciones' },
+  { label: 'Galería', href: '#galeria' },
+];
+
+const PRODUCTS: Product[] = [
+  {
+    id: 1,
+    name: 'Vela Joyero',
+    subtitle: 'Descubre una joya en su interior',
+    price: 'Desde $18',
+    bg: '#EDE5D6',
+    emoji: '💎',
+    badge: 'Best Seller',
+    tags: ['Cera natural', 'Con sorpresa'],
+  },
+  {
+    id: 2,
+    name: 'Vela Barqueta',
+    subtitle: 'La vela que transforma tu baño',
+    price: 'Desde $14',
+    bg: '#F7E8E0',
+    emoji: '🛁',
+    tags: ['Escultórica', 'Artesanal'],
+  },
+  {
+    id: 3,
+    name: 'Vela Carrusel',
+    subtitle: 'Magia y detalle en cada llama',
+    price: 'Desde $22',
+    bg: '#F0EBE0',
+    emoji: '🎠',
+    badge: 'Premium',
+    tags: ['Edición especial', 'Regalo ideal'],
+  },
+  {
+    id: 4,
+    name: 'Velón XXL',
+    subtitle: 'Aroma, diseño y funcionalidad',
+    price: 'Desde $16',
+    bg: '#E8EDE8',
+    emoji: '🕯️',
+    tags: ['Gran tamaño', 'Cera de soja'],
+  },
+  {
+    id: 5,
+    name: 'Mikados',
+    subtitle: 'Aromas constantes para tu hogar',
+    price: 'Desde $12',
+    bg: '#EBE8F0',
+    emoji: '🪔',
+    tags: ['Sin llama', 'Larga duración'],
+  },
+  {
+    id: 6,
+    name: 'Ambientador Coche',
+    subtitle: 'Tu fragancia favorita en cada viaje',
+    price: 'Desde $8',
+    bg: '#F0E8E8',
+    emoji: '🚗',
+    tags: ['Compacto', 'Potente'],
+  },
+];
+
+const BENEFITS: Benefit[] = [
+  {
+    icon: Leaf,
+    title: 'Cera natural 100%',
+    desc: 'Usamos cera de soja y cera natural. Sin parafina, sin químicos dañinos.',
+  },
+  {
+    icon: Heart,
+    title: 'Hecho a mano',
+    desc: 'Cada pieza es elaborada a mano con dedicación y atención al detalle.',
+  },
+  {
+    icon: Sparkles,
+    title: 'Cada producto tiene su magia',
+    desc: 'Desde velas joyero con sorpresa hasta esculturas únicas. Nada es ordinario.',
+  },
+  {
+    icon: Gift,
+    title: 'El regalo perfecto',
+    desc: 'Packaging cuidado, listo para regalar. También hacemos pedidos personalizados.',
+  },
+  {
+    icon: Package,
+    title: 'Envío a toda España',
+    desc: 'Enviamos a toda la península e islas. También disponibles en ferias de Tenerife.',
+  },
+  {
+    icon: MapPin,
+    title: 'Tenerife, Canarias',
+    desc: 'Marca canaria con corazón. Nos encontrás en mercados y ferias locales.',
+  },
+];
+
+const COLLECTIONS: Collection[] = [
+  { label: 'Halloween', bg: 'linear-gradient(135deg,#3D2410 0%,#8B3A0F 100%)', emoji: '👻' },
+  { label: 'Navidad', bg: 'linear-gradient(135deg,#1A3A1A 0%,#2E5E2E 100%)', emoji: '🎄' },
+  { label: 'Verano', bg: 'linear-gradient(135deg,#C47A2A 0%,#E4A84B 100%)', emoji: '☀️' },
+  { label: 'Harry Potter', bg: 'linear-gradient(135deg,#1A1A3A 0%,#3A2A5A 100%)', emoji: '⚡' },
+  { label: 'San Valentín', bg: 'linear-gradient(135deg,#7A1A2E 0%,#C44A6A 100%)', emoji: '❤️' },
+  { label: 'Personalizada', bg: 'linear-gradient(135deg,#2C2416 0%,#5A4A2A 100%)', emoji: '✨' },
+];
+
+const GALLERY_ITEMS = [
+  { bg: 'linear-gradient(135deg,#EDE5D6,#D4C4A8)', title: 'Vela Joyero', hint: '💎' },
+  { bg: 'linear-gradient(135deg,#F7E8E0,#E8C8B8)', title: 'Vela Barqueta', hint: '🛁' },
+  { bg: 'linear-gradient(135deg,#3D2410,#8B5A30)', title: 'Halloween', hint: '👻' },
+  { bg: 'linear-gradient(135deg,#F0EBE0,#DAD0C0)', title: 'Vela Carrusel', hint: '🎠' },
+  { bg: 'linear-gradient(135deg,#1A3A1A,#3A6A3A)', title: 'Colección Navidad', hint: '🎄' },
+  { bg: 'linear-gradient(135deg,#EBE8F0,#C8C0D8)', title: 'Mikados', hint: '🪔' },
+];
+
+const TICKER_ITEMS = [
+  '✦ Hecho a mano',
+  '✦ Cera natural',
+  '✦ Envío a toda España',
+  '✦ Tenerife, Canarias',
+  '✦ Cada producto tiene su magia',
+  '✦ Velas escultóricas únicas',
+  '✦ Pedidos personalizados',
+];
+
+// ─── Candle SVG Component ─────────────────────────────────────────────────────
+
+function AnimatedCandle({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
+  const scale = size === 'sm' ? 0.6 : size === 'lg' ? 1.4 : 1;
   return (
-    <div className="relative flex flex-col items-center group">
-      <motion.div 
-        animate={isWorking ? { y: [0, -4, 0] } : {}}
-        transition={{ repeat: Infinity, duration: 0.5 }}
-        className={`w-16 h-16 bg-zinc-800 border-2 ${isWorking ? 'border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'border-zinc-700'} rounded-lg flex items-center justify-center text-3xl relative overflow-hidden`}
+    <div className="float-anim relative inline-flex flex-col items-center" style={{ transform: `scale(${scale})`, transformOrigin: 'bottom center' }}>
+      {/* Smoke particles */}
+      {[0, 1, 2].map((i) => (
+        <div
+          key={i}
+          className="smoke absolute rounded-full"
+          style={{
+            width: 3, height: 3,
+            backgroundColor: 'rgba(200,180,140,0.5)',
+            top: -8 - i * 6,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            animationDelay: `${i * 0.8}s`,
+          }}
+        />
+      ))}
+      {/* Flame */}
+      <div
+        className="flame relative z-10 -mb-0.5"
+        style={{
+          width: 18, height: 26,
+          borderRadius: '50% 50% 30% 30%',
+          background: 'radial-gradient(ellipse at 50% 85%, #FFFBC8 0%, #FFCC33 35%, #FF8C00 65%, #E83A00 100%)',
+        }}
+      />
+      {/* Wick */}
+      <div style={{ width: 2, height: 8, backgroundColor: '#3D2410', zIndex: 20, position: 'relative' }} />
+      {/* Body */}
+      <div
+        style={{
+          width: 44,
+          height: 72,
+          borderRadius: '4px 4px 6px 6px',
+          background: 'linear-gradient(160deg, #F5F0E8 0%, #E4D4B8 40%, #C8A878 100%)',
+          boxShadow: '2px 4px 12px rgba(44,36,22,.2)',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
       >
-        {agent.avatar}
-        {isWorking && (
-          <div className="absolute inset-0 bg-emerald-500/10 animate-pulse" />
-        )}
-      </motion.div>
-      <div className="mt-2 text-center">
-        <p className="text-[10px] font-mono uppercase tracking-tighter text-zinc-400">{agent.role}</p>
-        <p className="text-xs font-bold text-zinc-100">{agent.name}</p>
+        {/* Wax melt line */}
+        <div style={{ position: 'absolute', top: 14, left: 0, right: 0, height: 2, background: 'rgba(255,255,255,0.4)', borderRadius: 2 }} />
       </div>
-      
-      {/* Tooltip-like status */}
-      <AnimatePresence>
-        {agent.currentTask && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.8, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 10 }}
-            className="absolute -top-12 left-1/2 -translate-x-1/2 bg-zinc-900 border border-zinc-700 p-2 rounded shadow-xl z-10 w-48 pointer-events-none"
-          >
-            <p className="text-[9px] text-emerald-400 font-mono uppercase mb-1">Current Task</p>
-            <p className="text-[10px] text-zinc-300 leading-tight line-clamp-2">{agent.currentTask}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
-};
+}
+
+// ─── Scroll hook ─────────────────────────────────────────────────────────────
+
+function useReveal() {
+  useEffect(() => {
+    const els = document.querySelectorAll('.reveal');
+    const obs = new IntersectionObserver(
+      (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+      { threshold: 0.12 }
+    );
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+}
+
+// ─── App ─────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const [agents, setAgents] = useState<Agent[]>(AGENTS);
-  const [logs, setLogs] = useState<ActivityLogEntry[]>([]);
-  const [stats, setStats] = useState({
-    tasks: 0,
-    tokens: 0,
-    cost: 0,
-  });
-  const [inputTask, setInputTask] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const logEndRef = useRef<HTMLDivElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  useReveal();
 
   useEffect(() => {
-    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [logs]);
-
-  const addLog = (agentId: string, message: string, type: ActivityLogEntry['type'] = 'info', tokens = 0, cost = 0) => {
-    const agent = agents.find(a => a.id === agentId);
-    if (!agent) return;
-
-    const newEntry: ActivityLogEntry = {
-      id: Math.random().toString(36).substr(2, 9),
-      timestamp: new Date(),
-      agentId,
-      agentName: agent.name,
-      role: agent.role,
-      message,
-      type,
-      tokens,
-      cost,
-    };
-
-    setLogs(prev => [...prev, newEntry]);
-    if (tokens > 0) {
-      setStats(prev => ({
-        tasks: prev.tasks + 1,
-        tokens: prev.tokens + tokens,
-        cost: prev.cost + cost,
-      }));
-    }
-  };
-
-  const updateAgentStatus = (id: string, status: Agent['status'], currentTask?: string) => {
-    setAgents(prev => prev.map(a => a.id === id ? { ...a, status, currentTask } : a));
-  };
-
-  const handleStartProcess = async () => {
-    if (!inputTask.trim() || isProcessing) return;
-    
-    setIsProcessing(true);
-    const leadAgent = agents.find(a => a.role === 'Lead')!;
-    
-    // 1. Lead analyzes
-    updateAgentStatus(leadAgent.id, 'working', `Analyzing: ${inputTask}`);
-    addLog(leadAgent.id, `Received new request: "${inputTask}"`, 'info');
-    
-    try {
-      const leadResult = await runAgentTask(leadAgent, `Analyze this task and decide which agent (Frontend, Backend, QA, Content, Scheduler) should handle it. Task: ${inputTask}. Respond with ONLY the role name.`);
-      const targetRole = leadResult.text.trim() as AgentRole;
-      addLog(leadAgent.id, `Analysis complete. Delegating to ${targetRole}.`, 'success', leadResult.tokens, leadResult.cost);
-      updateAgentStatus(leadAgent.id, 'idle');
-
-      // 2. Target agent works
-      const targetAgent = agents.find(a => a.role === targetRole) || agents.find(a => a.role === 'Backend')!;
-      updateAgentStatus(targetAgent.id, 'working', `Processing: ${inputTask}`);
-      addLog(targetAgent.id, `Starting task: ${inputTask}`, 'info');
-      
-      const workResult = await runAgentTask(targetAgent, `Execute this task: ${inputTask}`);
-      addLog(targetAgent.id, `Task completed: ${workResult.text.substring(0, 50)}...`, 'success', workResult.tokens, workResult.cost);
-      updateAgentStatus(targetAgent.id, 'idle');
-
-      // 3. QA validates
-      const qaAgent = agents.find(a => a.role === 'QA')!;
-      updateAgentStatus(qaAgent.id, 'working', `Validating output from ${targetAgent.name}`);
-      addLog(qaAgent.id, `Reviewing ${targetAgent.role} output...`, 'info');
-      
-      const qaResult = await runAgentTask(qaAgent, `Validate this output for quality and security: ${workResult.text}`);
-      addLog(qaAgent.id, `Validation passed: ${qaResult.text.substring(0, 50)}...`, 'success', qaResult.tokens, qaResult.cost);
-      updateAgentStatus(qaAgent.id, 'idle');
-
-    } catch (error) {
-      addLog('1', 'System error during orchestration', 'error');
-    } finally {
-      setIsProcessing(false);
-      setInputTask('');
-    }
-  };
+    const fn = () => setScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', fn);
+    return () => window.removeEventListener('scroll', fn);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-zinc-300 font-sans selection:bg-emerald-500/30">
-      {/* Top Navigation Bar */}
-      <nav className="h-14 border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-emerald-500 rounded flex items-center justify-center">
-            <Terminal className="text-black w-5 h-5" />
+    <div style={{ backgroundColor: '#F5F0E8', color: '#2C2416', fontFamily: '"DM Sans", sans-serif' }}>
+
+      {/* ══ NAVBAR ══════════════════════════════════════════════════════════ */}
+      <header
+        className="fixed top-0 inset-x-0 z-50 transition-all duration-300"
+        style={{
+          backgroundColor: scrolled ? 'rgba(245,240,232,0.96)' : 'transparent',
+          backdropFilter: scrolled ? 'blur(14px)' : 'none',
+          borderBottom: scrolled ? '1px solid rgba(196,132,90,0.18)' : 'none',
+        }}
+      >
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          {/* Logo */}
+          <a href="#" className="flex items-center gap-1.5 group">
+            <span style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.6rem', fontWeight: 600, letterSpacing: '0.08em', color: '#2C2416', lineHeight: 1 }}>
+              MAGEC
+            </span>
+            <span style={{ fontSize: '0.55rem', letterSpacing: '0.25em', color: '#C4845A', fontWeight: 500, alignSelf: 'flex-end', paddingBottom: 3 }}>
+              VELAS
+            </span>
+          </a>
+
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-8">
+            {NAV.map((l) => (
+              <a key={l.href} href={l.href} className="nav-link text-sm font-medium" style={{ color: '#3D3025' }}>{l.label}</a>
+            ))}
+          </nav>
+
+          <div className="hidden md:flex items-center gap-3">
+            <a
+              href={IG_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-opacity hover:opacity-70"
+              style={{ border: '1.5px solid #C4845A', color: '#C4845A' }}
+            >
+              <Instagram size={14} /> Instagram
+            </a>
+            <a
+              href={STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
+              style={{ backgroundColor: '#2C2416', color: '#F5F0E8' }}
+            >
+              <ShoppingBag size={14} /> Tienda online
+            </a>
           </div>
-          <h1 className="font-bold text-lg tracking-tight text-white">ATHENAS <span className="text-emerald-500">IT</span></h1>
-          <div className="ml-4 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded text-[10px] font-mono text-emerald-500 animate-pulse">
-            LIVE SYSTEM
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-4 text-[11px] font-mono">
-            <div className="flex flex-col items-end">
-              <span className="text-zinc-500 uppercase">Tasks</span>
-              <span className="text-white">{stats.tasks}</span>
-            </div>
-            <div className="w-px h-6 bg-zinc-800" />
-            <div className="flex flex-col items-end">
-              <span className="text-zinc-500 uppercase">Tokens</span>
-              <span className="text-white">{(stats.tokens / 1000).toFixed(2)}k</span>
-            </div>
-            <div className="w-px h-6 bg-zinc-800" />
-            <div className="flex flex-col items-end">
-              <span className="text-zinc-500 uppercase">Cost</span>
-              <span className="text-emerald-500">${stats.cost.toFixed(4)}</span>
-            </div>
-          </div>
-          <button className="p-2 hover:bg-zinc-800 rounded-full transition-colors">
-            <RefreshCw className="w-4 h-4 text-zinc-500" />
+
+          <button className="md:hidden p-2 rounded-lg" style={{ color: '#2C2416' }} onClick={() => setMenuOpen((v) => !v)}>
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
-      </nav>
 
-      <main className="p-6 grid grid-cols-12 gap-6 max-w-[1600px] mx-auto">
-        
-        {/* Left Panel: Office View */}
-        <section className="col-span-12 lg:col-span-8 space-y-6">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl">
-            <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/50">
-              <div className="flex items-center gap-2">
-                <Layout className="w-4 h-4 text-emerald-500" />
-                <h2 className="text-sm font-bold uppercase tracking-wider">Virtual Office Floor</h2>
-              </div>
-              <div className="flex gap-1">
-                <div className="w-2 h-2 rounded-full bg-red-500/50" />
-                <div className="w-2 h-2 rounded-full bg-yellow-500/50" />
-                <div className="w-2 h-2 rounded-full bg-green-500/50" />
-              </div>
+        {/* Mobile menu */}
+        {menuOpen && (
+          <div
+            className="md:hidden px-6 pt-3 pb-6 flex flex-col gap-5"
+            style={{ backgroundColor: 'rgba(245,240,232,0.98)', borderTop: '1px solid rgba(196,132,90,0.15)' }}
+          >
+            {NAV.map((l) => (
+              <a key={l.href} href={l.href} className="text-base font-medium" style={{ color: '#3D3025' }} onClick={() => setMenuOpen(false)}>{l.label}</a>
+            ))}
+            <div className="flex gap-3 pt-2">
+              <a href={IG_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm" style={{ color: '#C4845A' }}>
+                <Instagram size={15} /> @magec.velas
+              </a>
             </div>
-            
-            {/* The "RPG" Office View */}
-            <div className="aspect-video bg-[#1a1a1a] relative overflow-hidden p-8 flex flex-col items-center justify-center">
-              {/* Grid Background */}
-              <div className="absolute inset-0 opacity-10 pointer-events-none" 
-                style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '24px 24px' }} 
-              />
-              
-              <div className="relative z-10 w-full max-w-2xl">
-                <div className="text-center mb-12">
-                  <h3 className="text-2xl font-black text-white tracking-tighter uppercase italic">GNR Athenas Project</h3>
-                  <p className="text-emerald-500 font-mono text-xs">www.gonzalorocca.com.ar</p>
-                </div>
+            <a
+              href={STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 py-3 rounded-full text-sm font-semibold"
+              style={{ backgroundColor: '#2C2416', color: '#F5F0E8' }}
+            >
+              <ShoppingBag size={15} /> Ir a la tienda
+            </a>
+          </div>
+        )}
+      </header>
 
-                <div className="grid grid-cols-3 gap-y-16 gap-x-8">
-                  {agents.map(agent => (
-                    <PixelAgent key={agent.id} agent={agent} />
-                  ))}
-                </div>
-              </div>
+      {/* ══ TICKER ══════════════════════════════════════════════════════════ */}
+      <div className="overflow-hidden py-2.5 pt-16" style={{ backgroundColor: '#2C2416' }}>
+        <div className="marquee-track whitespace-nowrap flex">
+          {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
+            <span key={i} className="inline-block px-8 text-xs font-medium tracking-widest uppercase" style={{ color: '#C4845A' }}>
+              {item}
+            </span>
+          ))}
+        </div>
+      </div>
 
-              {/* Decorative Office Elements */}
-              <div className="absolute bottom-4 right-4 text-[10px] font-mono text-zinc-600">
-                SECURE_ENCLAVE_V2.0
-              </div>
-            </div>
+      {/* ══ HERO ════════════════════════════════════════════════════════════ */}
+      <section
+        className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden"
+        style={{ background: 'linear-gradient(165deg, #F5F0E8 0%, #EDE5D6 55%, #E0D2BC 100%)' }}
+      >
+        {/* Orbs */}
+        <div className="absolute" style={{ top: '15%', left: '8%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(196,132,90,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div className="absolute" style={{ bottom: '10%', right: '6%', width: 420, height: 420, borderRadius: '50%', background: 'radial-gradient(circle, rgba(200,132,60,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+        <div className="relative z-10 flex flex-col items-center max-w-3xl">
+          {/* Candle */}
+          <div className="mb-10">
+            <AnimatedCandle size="lg" />
           </div>
 
-          {/* Task Input Area */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-xl">
-            <div className="flex items-center gap-3 mb-4">
-              <MessageSquare className="w-5 h-5 text-emerald-500" />
-              <h3 className="text-sm font-bold uppercase">Command Center</h3>
+          {/* Eyebrow */}
+          <p style={{ letterSpacing: '0.35em', fontSize: '0.72rem', fontWeight: 500, color: '#C4845A', marginBottom: 16, textTransform: 'uppercase' }}>
+            Velas artesanales · Tenerife, Canarias
+          </p>
+
+          {/* Headline */}
+          <h1
+            style={{
+              fontFamily: '"Cormorant Garamond", serif',
+              fontSize: 'clamp(3.2rem, 9vw, 6.5rem)',
+              fontWeight: 600,
+              color: '#2C2416',
+              lineHeight: 1.05,
+              marginBottom: 24,
+            }}
+          >
+            Cada producto tiene{' '}
+            <em style={{ color: '#C4845A', fontStyle: 'italic' }}>su magia</em>
+          </h1>
+
+          {/* Subheadline */}
+          <p style={{ fontSize: '1.1rem', color: '#7A6A55', fontWeight: 300, maxWidth: 500, lineHeight: 1.7, marginBottom: 40 }}>
+            Velas escultóricas, joyeros, mikados y más — hechos a mano con cera natural en Tenerife.
+          </p>
+
+          {/* CTA buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <a
+              href={STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 px-9 py-4 rounded-full font-semibold text-base transition-all hover:opacity-90 active:scale-95 shadow-lg"
+              style={{ backgroundColor: '#2C2416', color: '#F5F0E8' }}
+            >
+              <ShoppingBag size={18} />
+              Comprar ahora
+              <ArrowRight size={16} />
+            </a>
+            <a
+              href={IG_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 px-9 py-4 rounded-full font-semibold text-base transition-all hover:opacity-75"
+              style={{ border: '2px solid #C4845A', color: '#C4845A' }}
+            >
+              <Instagram size={18} />
+              Ver Instagram
+            </a>
+          </div>
+
+          {/* Social proof */}
+          <div className="mt-14 flex flex-wrap items-center justify-center gap-6">
+            <div className="flex items-center gap-1.5">
+              {[...Array(5)].map((_, i) => <Star key={i} size={14} fill="#C4845A" color="#C4845A" />)}
+              <span style={{ fontSize: '0.85rem', color: '#7A6A55', marginLeft: 4 }}>+500 clientes felices</span>
             </div>
-            <div className="flex gap-4">
-              <input 
-                type="text" 
-                value={inputTask}
-                onChange={(e) => setInputTask(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleStartProcess()}
-                placeholder="Assign a new mission to the team..."
-                className="flex-1 bg-black border border-zinc-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 transition-colors font-mono"
-              />
-              <button 
-                onClick={handleStartProcess}
-                disabled={isProcessing || !inputTask.trim()}
-                className="bg-emerald-500 hover:bg-emerald-400 disabled:bg-zinc-800 disabled:text-zinc-600 text-black font-bold px-6 py-3 rounded-lg flex items-center gap-2 transition-all active:scale-95"
+            <span style={{ color: '#C4845A', opacity: 0.4 }}>·</span>
+            <div className="flex items-center gap-1.5" style={{ fontSize: '0.85rem', color: '#7A6A55' }}>
+              <MapPin size={14} style={{ color: '#C4845A' }} />
+              Disponibles en Tenerife y online
+            </div>
+          </div>
+        </div>
+
+        <a href="#nosotros" className="absolute bottom-8 flex flex-col items-center gap-1 opacity-40 hover:opacity-70 transition-opacity">
+          <span style={{ fontSize: '0.65rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#7A6A55' }}>Descubrir</span>
+          <ChevronDown size={18} style={{ color: '#C4845A' }} className="animate-bounce" />
+        </a>
+      </section>
+
+      {/* ══ SOBRE NOSOTROS ══════════════════════════════════════════════════ */}
+      <section id="nosotros" style={{ backgroundColor: '#2C2416' }} className="py-24 px-6">
+        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+
+          {/* Visual side */}
+          <div className="reveal flex justify-center">
+            <div className="relative" style={{ width: 280, height: 360 }}>
+              {/* Glow */}
+              <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 60%, rgba(196,132,90,0.25) 0%, transparent 70%)', borderRadius: '50%' }} />
+
+              {/* Three candles */}
+              <div className="absolute flex items-end gap-4" style={{ bottom: 40, left: '50%', transform: 'translateX(-50%)' }}>
+                <AnimatedCandle size="sm" />
+                <AnimatedCandle size="md" />
+                <AnimatedCandle size="sm" />
+              </div>
+
+              {/* Floating chip */}
+              <div
+                className="absolute"
+                style={{
+                  top: 30, right: 10,
+                  backgroundColor: '#C4845A', color: '#F5F0E8',
+                  padding: '6px 14px', borderRadius: 999,
+                  fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.05em',
+                }}
               >
-                {isProcessing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-current" />}
-                EXECUTE
-              </button>
+                Hecho a mano ✦
+              </div>
+              <div
+                className="absolute"
+                style={{
+                  bottom: 20, left: 0,
+                  backgroundColor: '#F5F0E8', color: '#2C2416',
+                  padding: '6px 14px', borderRadius: 999,
+                  fontSize: '0.72rem', fontWeight: 600,
+                }}
+              >
+                Cera natural 🌿
+              </div>
             </div>
           </div>
-        </section>
 
-        {/* Right Panel: Activity Log & Stats */}
-        <section className="col-span-12 lg:col-span-4 space-y-6">
-          {/* Activity Log */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl flex flex-col h-[600px] shadow-xl">
-            <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-emerald-500" />
-                <h2 className="text-sm font-bold uppercase tracking-wider">Activity Log</h2>
-              </div>
-              <span className="text-[10px] font-mono text-zinc-500">REAL-TIME</span>
+          {/* Text side */}
+          <div className="reveal">
+            <p style={{ letterSpacing: '0.35em', fontSize: '0.7rem', fontWeight: 500, color: '#C4845A', marginBottom: 16, textTransform: 'uppercase' }}>
+              Nuestra historia
+            </p>
+            <h2
+              style={{
+                fontFamily: '"Cormorant Garamond", serif',
+                fontSize: 'clamp(2rem, 4vw, 3rem)',
+                fontWeight: 600,
+                color: '#F5F0E8',
+                lineHeight: 1.2,
+                marginBottom: 20,
+              }}
+            >
+              Una marca nacida en{' '}
+              <em style={{ color: '#D4A878' }}>Tenerife</em>{' '}
+              con magia propia
+            </h2>
+            <p style={{ color: '#A89880', fontWeight: 300, fontSize: '1.05rem', lineHeight: 1.8, marginBottom: 16 }}>
+              MAGEC Velas nació del amor por los aromas y el diseño artesanal. Desde nuestra isla creamos velas escultóricas únicas — desde joyeros con sorpresa hasta carruseles de cera — con materiales naturales y mucho cariño.
+            </p>
+            <p style={{ color: '#A89880', fontWeight: 300, fontSize: '1.05rem', lineHeight: 1.8, marginBottom: 28 }}>
+              Nos encontrás en mercados de Tenerife y en nuestra tienda online. Cada pieza es irrepetible, como las personas para las que las regalás.
+            </p>
+            <div className="flex gap-4 flex-wrap">
+              <a
+                href={STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm font-semibold group"
+                style={{ color: '#D4A878' }}
+              >
+                Visitar tienda <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
+              </a>
+              <span style={{ color: '#5A4A3A' }}>|</span>
+              <a
+                href={IG_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm font-medium hover:opacity-70 transition-opacity"
+                style={{ color: '#A89880' }}
+              >
+                <Instagram size={14} /> @magec.velas
+              </a>
             </div>
-            
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 font-mono text-[11px]">
-              {logs.length === 0 && (
-                <div className="h-full flex flex-col items-center justify-center text-zinc-600 italic">
-                  <Terminal className="w-8 h-8 mb-2 opacity-20" />
-                  <p>Waiting for system initialization...</p>
-                </div>
-              )}
-              {logs.map((log) => (
-                <motion.div 
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  key={log.id} 
-                  className="border-l-2 border-zinc-800 pl-3 py-1 hover:bg-white/5 transition-colors group"
+          </div>
+        </div>
+      </section>
+
+      {/* ══ PRODUCTOS ═══════════════════════════════════════════════════════ */}
+      <section id="productos" style={{ backgroundColor: '#F5F0E8' }} className="py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="reveal text-center mb-14">
+            <p style={{ letterSpacing: '0.35em', fontSize: '0.7rem', fontWeight: 500, color: '#C4845A', marginBottom: 12, textTransform: 'uppercase' }}>
+              Lo que creamos
+            </p>
+            <h2
+              style={{
+                fontFamily: '"Cormorant Garamond", serif',
+                fontSize: 'clamp(2rem, 5vw, 3.2rem)',
+                fontWeight: 600,
+                color: '#2C2416',
+                lineHeight: 1.2,
+                marginBottom: 12,
+              }}
+            >
+              Nuestros productos
+            </h2>
+            <p style={{ color: '#7A6A55', fontWeight: 300, maxWidth: 480, margin: '0 auto' }}>
+              Desde velas con joyería escondida hasta mikados para tu hogar — todos hechos a mano.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {PRODUCTS.map((p, i) => (
+              <div
+                key={p.id}
+                className="product-card reveal rounded-2xl overflow-hidden cursor-pointer"
+                style={{
+                  backgroundColor: '#FFF8F0',
+                  border: '1px solid rgba(196,132,90,0.13)',
+                  animationDelay: `${i * 70}ms`,
+                }}
+              >
+                {/* Card image area */}
+                <div
+                  className="card-img relative transition-transform duration-500"
+                  style={{ height: 180, backgroundColor: p.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={`font-bold ${
-                      log.type === 'success' ? 'text-emerald-500' : 
-                      log.type === 'error' ? 'text-red-500' : 
-                      'text-zinc-400'
-                    }`}>
-                      [{log.role}] {log.agentName}
-                    </span>
-                    <span className="text-[9px] text-zinc-600">
-                      {log.timestamp.toLocaleTimeString([], { hour12: false })}
-                    </span>
+                  <span style={{ fontSize: '4rem', filter: 'drop-shadow(0 4px 8px rgba(44,36,22,0.15))' }}>{p.emoji}</span>
+
+                  {/* Overlay */}
+                  <div
+                    className="card-overlay absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300"
+                    style={{ backgroundColor: 'rgba(44,36,22,0.45)' }}
+                  >
+                    <a
+                      href={STORE_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-5 py-2.5 rounded-full text-sm font-semibold"
+                      style={{ backgroundColor: '#C4845A', color: '#F5F0E8' }}
+                    >
+                      Ver producto
+                    </a>
                   </div>
-                  <p className="text-zinc-300 leading-relaxed">{log.message}</p>
-                  {log.tokens ? (
-                    <div className="mt-1 flex gap-2 text-[9px] text-zinc-500">
-                      <span>TOKENS: {log.tokens}</span>
-                      <span>COST: ${log.cost?.toFixed(5)}</span>
-                    </div>
-                  ) : null}
-                </motion.div>
+
+                  {p.badge && (
+                    <span
+                      className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide"
+                      style={{ backgroundColor: '#C4845A', color: '#F5F0E8' }}
+                    >
+                      {p.badge}
+                    </span>
+                  )}
+                </div>
+
+                {/* Card body */}
+                <div className="p-5">
+                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                    <h3
+                      style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: '1.15rem', fontWeight: 600, color: '#2C2416', lineHeight: 1.2 }}
+                    >
+                      {p.name}
+                    </h3>
+                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#C4845A', whiteSpace: 'nowrap' }}>{p.price}</span>
+                  </div>
+                  <p style={{ fontSize: '0.88rem', color: '#7A6A55', fontWeight: 300, marginBottom: 14, lineHeight: 1.5 }}>{p.subtitle}</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {p.tags.map((t) => (
+                      <span
+                        key={t}
+                        style={{
+                          fontSize: '0.68rem', fontWeight: 500, letterSpacing: '0.04em',
+                          padding: '3px 10px', borderRadius: 999,
+                          backgroundColor: 'rgba(196,132,90,0.1)', color: '#8A5A38',
+                        }}
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="reveal text-center mt-12">
+            <a
+              href={STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2.5 px-9 py-4 rounded-full font-semibold text-base transition-all hover:opacity-90 active:scale-95 shadow-md"
+              style={{ backgroundColor: '#2C2416', color: '#F5F0E8' }}
+            >
+              <ShoppingBag size={18} />
+              Ver catálogo completo
+              <ArrowRight size={16} />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ══ BENEFICIOS ══════════════════════════════════════════════════════ */}
+      <section style={{ backgroundColor: '#EDE5D6' }} className="py-24 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="reveal text-center mb-14">
+            <p style={{ letterSpacing: '0.35em', fontSize: '0.7rem', fontWeight: 500, color: '#C4845A', marginBottom: 12, textTransform: 'uppercase' }}>
+              Por qué MAGEC
+            </p>
+            <h2
+              style={{
+                fontFamily: '"Cormorant Garamond", serif',
+                fontSize: 'clamp(2rem, 4vw, 3rem)',
+                fontWeight: 600,
+                color: '#2C2416',
+                lineHeight: 1.2,
+              }}
+            >
+              El arte de hacer con alma
+            </h2>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {BENEFITS.map((b, i) => (
+              <div
+                key={b.title}
+                className="reveal p-6 rounded-2xl transition-all hover:shadow-md"
+                style={{
+                  backgroundColor: '#FFF8F0',
+                  border: '1px solid rgba(196,132,90,0.1)',
+                  animationDelay: `${i * 80}ms`,
+                }}
+              >
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+                  style={{ backgroundColor: 'rgba(196,132,90,0.12)' }}
+                >
+                  <b.icon size={20} style={{ color: '#C4845A' }} />
+                </div>
+                <h3 style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: '1.05rem', fontWeight: 600, color: '#2C2416', marginBottom: 6 }}>
+                  {b.title}
+                </h3>
+                <p style={{ fontSize: '0.875rem', color: '#7A6A55', fontWeight: 300, lineHeight: 1.6 }}>{b.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ COLECCIONES TEMÁTICAS ════════════════════════════════════════════ */}
+      <section id="colecciones" style={{ backgroundColor: '#F5F0E8' }} className="py-24 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="reveal text-center mb-14">
+            <p style={{ letterSpacing: '0.35em', fontSize: '0.7rem', fontWeight: 500, color: '#C4845A', marginBottom: 12, textTransform: 'uppercase' }}>
+              Para cada momento
+            </p>
+            <h2
+              style={{
+                fontFamily: '"Cormorant Garamond", serif',
+                fontSize: 'clamp(2rem, 4vw, 3rem)',
+                fontWeight: 600,
+                color: '#2C2416',
+              }}
+            >
+              Colecciones especiales
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {COLLECTIONS.map((c, i) => (
+              <a
+                key={c.label}
+                href={IG_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="reveal group relative rounded-2xl overflow-hidden flex flex-col items-center justify-center py-10 px-6 text-center transition-transform hover:scale-[1.02]"
+                style={{ background: c.bg, animationDelay: `${i * 90}ms`, minHeight: 140 }}
+              >
+                <span style={{ fontSize: '2.5rem', marginBottom: 8, display: 'block' }}>{c.emoji}</span>
+                <span
+                  style={{
+                    fontFamily: '"Cormorant Garamond", serif',
+                    fontSize: '1.1rem', fontWeight: 600,
+                    color: 'rgba(245,240,232,0.95)', letterSpacing: '0.04em',
+                  }}
+                >
+                  {c.label}
+                </span>
+                <div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4"
+                  style={{ background: 'rgba(0,0,0,0.2)' }}
+                >
+                  <span style={{ fontSize: '0.75rem', color: 'rgba(245,240,232,0.8)', fontWeight: 500 }}>Ver en Instagram →</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ GALERÍA IG ══════════════════════════════════════════════════════ */}
+      <section id="galeria" style={{ backgroundColor: '#2C2416' }} className="py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="reveal text-center mb-12">
+            <p style={{ letterSpacing: '0.35em', fontSize: '0.7rem', fontWeight: 500, color: '#C4845A', marginBottom: 12, textTransform: 'uppercase' }}>
+              @magec.velas
+            </p>
+            <h2
+              style={{
+                fontFamily: '"Cormorant Garamond", serif',
+                fontSize: 'clamp(2rem, 4vw, 3rem)',
+                fontWeight: 600,
+                color: '#F5F0E8',
+                marginBottom: 10,
+              }}
+            >
+              Seguinos en Instagram
+            </h2>
+            <p style={{ color: '#A89880', fontWeight: 300 }}>
+              Nuevos productos, tips y colecciones exclusivas cada semana
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-10">
+            {GALLERY_ITEMS.map((item, i) => (
+              <a
+                key={i}
+                href={IG_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="reveal group relative rounded-xl overflow-hidden"
+                style={{ aspectRatio: '1/1', background: item.bg, animationDelay: `${i * 80}ms` }}
+              >
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span style={{ fontSize: '3rem', opacity: 0.7 }}>{item.hint}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'rgba(44,36,22,0.6)', fontWeight: 500, marginTop: 6 }}>{item.title}</span>
+                </div>
+                <div
+                  className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300"
+                  style={{ backgroundColor: 'rgba(44,36,22,0.5)' }}
+                >
+                  <Instagram size={30} color="white" />
+                </div>
+              </a>
+            ))}
+          </div>
+
+          <div className="reveal text-center">
+            <a
+              href={IG_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full font-semibold text-base transition-all hover:opacity-75"
+              style={{ border: '2px solid rgba(196,132,90,0.6)', color: '#D4A878' }}
+            >
+              <Instagram size={18} />
+              Ver perfil completo
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ══ CTA FINAL ═══════════════════════════════════════════════════════ */}
+      <section
+        className="py-28 px-6 text-center"
+        style={{ background: 'linear-gradient(135deg, #EDE5D6 0%, #E0D0B8 50%, #D4C4A0 100%)' }}
+      >
+        <div className="max-w-2xl mx-auto reveal">
+          <div className="mb-10 flex justify-center">
+            <AnimatedCandle size="lg" />
+          </div>
+          <p style={{ letterSpacing: '0.35em', fontSize: '0.7rem', fontWeight: 500, color: '#C4845A', marginBottom: 16, textTransform: 'uppercase' }}>
+            Llevalos a casa
+          </p>
+          <h2
+            style={{
+              fontFamily: '"Cormorant Garamond", serif',
+              fontSize: 'clamp(2.2rem, 6vw, 4rem)',
+              fontWeight: 600,
+              color: '#2C2416',
+              lineHeight: 1.15,
+              marginBottom: 16,
+            }}
+          >
+            Regalá magia,{' '}
+            <em style={{ color: '#C4845A' }}>regalá MAGEC</em>
+          </h2>
+          <p style={{ color: '#7A6A55', fontWeight: 300, fontSize: '1.05rem', lineHeight: 1.7, marginBottom: 36 }}>
+            Pedidos online con envío a toda España. También en ferias y mercados de Tenerife.
+            Para pedidos personalizados o al por mayor, escribinos por Instagram.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href={STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2.5 px-9 py-4 rounded-full font-semibold text-base transition-all hover:opacity-90 active:scale-95 shadow-lg"
+              style={{ backgroundColor: '#2C2416', color: '#F5F0E8' }}
+            >
+              <ShoppingBag size={18} />
+              Ir a la tienda online
+            </a>
+            <a
+              href={IG_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2.5 px-9 py-4 rounded-full font-semibold text-base transition-all hover:opacity-75"
+              style={{ border: '2px solid #C4845A', color: '#C4845A' }}
+            >
+              <Instagram size={18} />
+              Escribir por Instagram
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ══ FOOTER ══════════════════════════════════════════════════════════ */}
+      <footer style={{ backgroundColor: '#1E160C', borderTop: '1px solid rgba(196,132,90,0.12)' }} className="py-12 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-8">
+            {/* Logo */}
+            <div className="flex items-center gap-1.5">
+              <span style={{ fontFamily: '"Cormorant Garamond",serif', fontSize: '1.5rem', fontWeight: 600, letterSpacing: '0.08em', color: '#F5F0E8' }}>
+                MAGEC
+              </span>
+              <span style={{ fontSize: '0.5rem', letterSpacing: '0.25em', color: '#C4845A', fontWeight: 500, alignSelf: 'flex-end', paddingBottom: 2 }}>
+                VELAS
+              </span>
+            </div>
+
+            {/* Nav */}
+            <nav className="flex flex-wrap items-center justify-center gap-6">
+              {NAV.map((l) => (
+                <a key={l.href} href={l.href} className="text-sm hover:opacity-70 transition-opacity" style={{ color: '#7A6A55' }}>{l.label}</a>
               ))}
-              <div ref={logEndRef} />
-            </div>
+            </nav>
+
+            {/* Social */}
+            <a
+              href={IG_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm font-medium hover:opacity-70 transition-opacity"
+              style={{ color: '#C4845A' }}
+            >
+              <Instagram size={16} />
+              @magec.velas
+            </a>
           </div>
 
-          {/* Quick Stats Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                <span className="text-[10px] font-bold uppercase text-zinc-500">Security</span>
-              </div>
-              <p className="text-xl font-bold text-white">ACTIVE</p>
-              <div className="w-full bg-zinc-800 h-1 mt-2 rounded-full overflow-hidden">
-                <div className="bg-emerald-500 h-full w-full" />
-              </div>
-            </div>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Cpu className="w-4 h-4 text-emerald-500" />
-                <span className="text-[10px] font-bold uppercase text-zinc-500">Load</span>
-              </div>
-              <p className="text-xl font-bold text-white">{isProcessing ? '84%' : '2%'}</p>
-              <div className="w-full bg-zinc-800 h-1 mt-2 rounded-full overflow-hidden">
-                <motion.div 
-                  animate={{ width: isProcessing ? '84%' : '2%' }}
-                  className="bg-emerald-500 h-full" 
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
+          <div style={{ height: 1, backgroundColor: 'rgba(196,132,90,0.1)', marginBottom: 24 }} />
 
-      {/* Footer */}
-      <footer className="mt-12 border-t border-zinc-800 p-8 text-center">
-        <p className="text-xs text-zinc-600 font-mono">
-          &copy; 2026 ATHENAS IT MULTI-AGENT ORCHESTRATOR // BUILT WITH GEMINI 3.1 PRO
-        </p>
+          <div className="flex flex-col md:flex-row items-center justify-between gap-3 text-xs" style={{ color: '#4A3A28' }}>
+            <p>© 2026 MAGEC Velas · Tenerife, Canarias, España</p>
+            <a href={STORE_URL} target="_blank" rel="noopener noreferrer" className="hover:text-amber-600 transition-colors" style={{ color: '#6A5A44' }}>
+              magec-velas.sumaplastore.com
+            </a>
+          </div>
+        </div>
       </footer>
+
     </div>
   );
 }
