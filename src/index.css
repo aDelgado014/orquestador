@@ -1,25 +1,87 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600&display=swap');
 @import "tailwindcss";
 
 @theme {
+  --font-serif: "Playfair Display", Georgia, serif;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --color-cream: #FDF6EC;
+  --color-cream-dark: #F5E9D4;
+  --color-amber: #C8862A;
+  --color-amber-light: #E4A84B;
+  --color-amber-dark: #9B6520;
+  --color-bark: #2C1A0E;
+  --color-bark-light: #4A2E1A;
+  --color-smoke: #7A6A5A;
 }
 
-/* Custom scrollbar for the log */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-cream);
+  color: var(--color-bark);
+}
+
 ::-webkit-scrollbar {
   width: 6px;
 }
-
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--color-cream);
 }
-
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: var(--color-amber);
   border-radius: 10px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+@keyframes flicker {
+  0%, 100% { opacity: 1; transform: scaleY(1) translateX(0); }
+  25%       { opacity: 0.95; transform: scaleY(0.97) translateX(1px); }
+  50%       { opacity: 1; transform: scaleY(1.02) translateX(-1px); }
+  75%       { opacity: 0.97; transform: scaleY(0.98) translateX(0.5px); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 30px 8px rgba(228, 168, 75, 0.3); }
+  50%       { box-shadow: 0 0 50px 16px rgba(228, 168, 75, 0.5); }
+}
+
+@keyframes float-up {
+  0%   { transform: translateY(0) scaleX(1); opacity: 0.6; }
+  50%  { transform: translateY(-20px) scaleX(0.7); opacity: 0.3; }
+  100% { transform: translateY(-40px) scaleX(0.4); opacity: 0; }
+}
+
+.flame {
+  animation: flicker 1.8s ease-in-out infinite;
+}
+
+.candle-glow {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+.smoke-particle {
+  animation: float-up 3s ease-out infinite;
+}
+
+.fade-in-up {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.fade-in-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.product-card:hover .product-overlay {
+  opacity: 1;
+}
+
+.product-card:hover img {
+  transform: scale(1.06);
 }
